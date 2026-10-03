@@ -100,12 +100,16 @@ function setLang(l){lang=l;localStorage.setItem('dinataLang',l);document.getElem
 function toggleLang(){let e=document.getElementById('langMenu');e.style.display=e.style.display==='block'?'none':'block'}
 
 function renderProducts(filter='all'){
- const wrap=document.getElementById('products');wrap.innerHTML='';
- products.filter(p=>filter==='all'||p.cat===filter).forEach(p=>{
-  const el=document.createElement('article');el.className='product';
-  el.innerHTML=`<img src="${p.img}" alt="${p.name}"><div class="body"><div class="tag">${p.cat} • ${p.pack}</div><h3>${p.name}</h3><p>${p.desc}</p><div class="price">$${p.price} USD / ${p.pack}</div><div class="min">${p.id==='riper-jasper'?'$80 USD / kg available. ':''}${p.id==='riper-jasper'?'Minimum order value: $150 USD.':'Minimum order value: $150 USD.'}</div><button class="add" onclick="addToCart('${p.id}')">ADD TO CART</button></div>`;
-  wrap.appendChild(el);
- });
+const wrap=document.getElementById('products');
+wrap.innerHTML='';
+products.filter(p=>filter==='all'||p.cat===filter).forEach(p=>{
+const el=document.createElement('article');
+el.className='product';
+const unitControl=p.id==='riper-jasper'?'<label for="jasper-unit">Choose unit:</label><select id="jasper-unit"><option value="piece">Per piece — $30 USD</option><option value="kg">Per kg — $80 USD</option></select>':'';
+const addButton=p.id==='riper-jasper'?`<button class="add" onclick="addToCart('${p.id}',document.getElementById('jasper-unit').value)">ADD TO CART</button>`:`<button class="add" onclick="addToCart('${p.id}')">ADD TO CART</button>`;
+el.innerHTML=`<img src="${p.img}" alt="${p.name}"><div class="body"><div class="tag">${p.cat} • ${p.pack}</div><h3>${p.name}</h3><p>${p.desc}</p><div class="price">$${p.price} USD / ${p.pack}</div><div class="min">${p.id==='riper-jasper'?'Also available at $80 USD / kg. ':''}Minimum order value: $150 USD.</div>${unitControl}${addButton}</div>`;
+wrap.appendChild(el);
+});
 }
 document.querySelectorAll('.filter').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.filter').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderProducts(b.dataset.cat)}));
 
