@@ -148,11 +148,17 @@ document.getElementById('checkoutBtn').disabled=total<150;
 function openCart(){document.getElementById('cartOverlay').style.display='block';renderCart()}
 function closeCart(){document.getElementById('cartOverlay').style.display='none'}
 async function startCheckout(){
-const total=cart.reduce((a,i)=>{let p=products.find(x=>x.id===i.id);let price=p.id==='riper-jasper'&&i.unit==='kg'?80:p.price;return a+price*i.qty},0);
+const total=cart.reduce((a,i)=>{
+const p=products.find(p=>p.id===i.id);
+const price=i.id==='riper-jasper'&&i.unit==='kg'?80:p.price;
+return a+price*i.qty;
+},0);
+
 if(total<150){
 alert("Minimum checkout is USD 150.");
 return;
 }
+
 const unitById={
 "fossil-coral":"retail_pack",
 "riper-jasper":"piece",
@@ -160,6 +166,7 @@ const unitById={
 "colored-halfmoon":"pack",
 "petrified-wood":"pack"
 };
+
 try{
 const response=await fetch("https://dinata-payment.alvinaldinata88.workers.dev/create-order",{
 method:"POST",
@@ -167,21 +174,25 @@ headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
 items:cart.map(i=>({
 id:i.id,
-unit:i.id==='riper-jasper'?(i.unit||'piece'):unitById[i.id],
+unit:i.id==="riper-jasper"?(i.unit==="kg"?"kg":"piece"):unitById[i.id],
 qty:i.qty
 }))
 })
 });
+
 const data=await response.json();
+
 if(!response.ok||!data.approvalUrl){
 throw new Error(data.error||"Could not start PayPal checkout.");
 }
+
 window.location.href=data.approvalUrl;
+
 }catch(error){
 alert("Checkout error: "+error.message);
 }
 }
-  async function handlePaypalReturn(){
+async function handlePaypalReturn(){
 const params=new URLSearchParams(window.location.search);
 const payment=params.get("paypal");
 if(payment==="cancel"){
