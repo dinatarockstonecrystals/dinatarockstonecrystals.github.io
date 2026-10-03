@@ -125,7 +125,7 @@ function openCart(){document.getElementById('cartOverlay').style.display='block'
 function closeCart(){document.getElementById('cartOverlay').style.display='none'}
 function startCheckout(){
  const total=cart.reduce((a,i)=>a+products.find(p=>p.id===i.id).price*i.qty,0);
- if(total<100)return;
+ if(total<150)return;
  // Secure payment integration placeholder. The PayPal client secret must never be put in this public HTML.
  alert('PayPal checkout is ready to be connected. For live checkout, connect this storefront to a secure PayPal backend/serverless function using your PayPal Business credentials.');
 }
