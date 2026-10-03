@@ -119,7 +119,7 @@ function renderCart(){
  const wrap=document.getElementById('cartItems');wrap.innerHTML='';
  if(!cart.length){wrap.innerHTML='<p style="color:#888;font:13px Arial">Your cart is empty.</p>'}
  cart.forEach(i=>{let p=products.find(x=>x.id===i.id);let row=document.createElement('div');row.className='cartrow';row.innerHTML=`<img src="${p.img}" alt=""><div><h4>${p.name}</h4><p>$${p.price} × ${i.qty} · ${p.pack}</p><div class="qty"><button onclick="changeQty('${p.id}',-1)">−</button><span>${i.qty}</span><button onclick="changeQty('${p.id}',1)">+</button><button class="remove" onclick="removeItem('${p.id}')">Remove</button></div></div><strong>$${(p.price*i.qty).toFixed(0)}</strong>`;wrap.appendChild(row)});
- document.getElementById('checkoutBtn').disabled=total<100;
+ document.getElementById('checkoutBtn').disabled=total<150;
 }
 function openCart(){document.getElementById('cartOverlay').style.display='block';renderCart()}
 function closeCart(){document.getElementById('cartOverlay').style.display='none'}
