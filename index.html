@@ -24,28 +24,15 @@ footer{border-top:1px solid var(--line);padding:28px 6%;text-align:center;color:
 @media(max-width:850px){.links{display:none}.grid{grid-template-columns:1fr 1fr}.about{grid-template-columns:1fr}}
 @media(max-width:560px){.grid{grid-template-columns:1fr}.hero{min-height:70vh}.title{font-size:32px}.logo img{width:55px;height:55px}}
 </style>
-
-<!-- DINATA_SUPABASE_V8_CONFIG -->
+<!-- DINATA SUPABASE V8 - CONFIG -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-/*
-  DINATA ROCKSTONE CRYSTALS - V8 Supabase
-  Replace ONLY the two values below.
-  Never put a Supabase Secret/Service Role key here.
-*/
 window.DINATA_SUPABASE_URL = "https://macrgsudylsidomvxwld.supabase.co";
 window.DINATA_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_INX8OEbFoPQwykjAfdXg-Q_GBGNiw8A";
-
-(function () {
-  if (!window.supabase || !window.DINATA_SUPABASE_URL.startsWith("http")) return;
-  if (!window.DINATA_SUPABASE_PUBLISHABLE_KEY.startsWith("sb_publishable_")) return;
-  window.dinataSupabase = window.supabase.createClient(
-    window.DINATA_SUPABASE_URL.replace(/\/+$/,""),
-    window.DINATA_SUPABASE_PUBLISHABLE_KEY
-  );
-})();
+window.dinataSupabase = window.supabase.createClient(
+  window.DINATA_SUPABASE_URL, window.DINATA_SUPABASE_PUBLISHABLE_KEY
+);
 </script>
-
 </head>
 <body>
 <nav>
@@ -91,7 +78,7 @@ window.DINATA_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_INX8OEbFoPQwykjAfdXg-Q_
     <div class="eyebrow">Your Order</div><h2>Shopping Cart</h2>
     <div id="cartItems"></div>
     <div class="total">Total: $<span id="cartTotal">0</span> USD</div>
-    <div class="notice">Minimum order value: <strong>$100 USD</strong>. Add products until your cart reaches the minimum, then continue to PayPal checkout.</div>
+    <div class="notice">Minimum order value: <strong>$150 USD</strong>. Add products until your cart reaches the minimum, then continue to PayPal checkout.</div>
     <button id="checkoutBtn" class="checkout" onclick="startCheckout()" disabled>Proceed to PayPal Checkout</button>
     <div class="paynote">PayPal will determine the payment methods available to the buyer, which may include eligible debit/credit card options.</div>
   </aside>
@@ -104,7 +91,39 @@ const products=[
 {id:'cloudy-plume',name:'Cloudy Plume Doublet',cat:'cabochons',price:100,pack:'5 pcs',img:'products/cloudy-plume-doublet-1.jpg',desc:'Cloud-like plume patterns and polished cabochon form, suitable for handmade earrings.'},
 {id:'colored-halfmoon',name:'Colored Halfmoon',cat:'cabochons',price:100,pack:'6 pcs',img:'products/colored-halfmoon-1.jpg',desc:'Colorful half-moon carving cabochons for jewelry, accessories and collections.'},
 {id:'petrified-wood',name:'Petrified Wood / Palm Root Cabochons',cat:'cabochons',price:100,pack:'6 pcs',img:'products/petrified-wood-palm-root-1.jpg',desc:'Polished natural material with distinctive organic patterns for jewelry making.'}
-];
+]; // end of local fallback products
+
+async function loadSupabaseProducts(){
+  try{
+    const {data,error}=await window.dinataSupabase.from('products')
+      .select('*').eq('active',true).order('created_at',{ascending:false});
+    if(error || !Array.isArray(data) || !data.length) return;
+    const remote=data.map(p=>{
+      const c=String(p.category||'').toLowerCase();
+      let cat=c;
+      if(c.includes('cabochon')) cat='cabochons';
+      else if(c.includes('palm')) cat='palm';
+      else if(c.includes('earring')) cat='earrings';
+      else if(c.includes('pendant')) cat='pendants';
+      else if(c.includes('polished')) cat='polished';
+      return {
+        id:'supabase-'+String(p.id),
+        name:p.name||'Unnamed Product',
+        cat,
+        price:Number(p.price||0),
+        pack:p.pack||'',
+        img:p.image_url||'',
+        desc:p.description||''
+      };
+    }).filter(p=>p.img);
+    // Preserve the original V7 catalog and append Admin products.
+    const existingIds=new Set(products.map(p=>p.id));
+    remote.forEach(p=>{if(!existingIds.has(p.id)) products.push(p);});
+    renderProducts();
+  }catch(e){
+    console.warn('Supabase catalog unavailable; keeping V7 catalog.',e);
+  }
+}
 
 let cart=JSON.parse(localStorage.getItem('dinataCart')||'[]');
 let lang=localStorage.getItem('dinataLang')||'en';
@@ -118,14 +137,14 @@ ja:{shop:'ショップ',story:'私たちについて',contact:'お問い合わ�
 id:{shop:'Toko',story:'Tentang Kami',contact:'Kontak',hero:'Batu permata alami, kristal, cabochon, dan batu poles dari Indonesia — dipilih untuk kolektor, pembuat perhiasan, dan pengrajin di seluruh dunia.',explore:'Lihat Koleksi',collection:'Koleksi Kami',title:'Batu alami dengan karakter tersendiri.',intro:'Lihat produk yang tersedia. Tambahkan beberapa produk ke keranjang dan lakukan satu kali checkout.'}
 };
 
-function setLang(l){lang=l;localStorage.setItem('dinataLang',l);document.getElementById('langMenu').style.display='none';document.getElementById('langLabel').textContent={en:'English',de:'Deutsch',fr:'Français',es:'Español',ja:'日本語',id:'Indonesia'}[l];document.querySelectorAll('[data-i18n]').forEach(e=>e.textContent=tr[l][e.dataset.i18n]||e.textContent);renderProducts();renderCart()}
+function setLang(l){lang=l;localStorage.setItem('dinataLang',l);document.getElementById('langMenu').style.display='none';document.getElementById('langLabel').textContent={en:'English',de:'Deutsch',fr:'Français',es:'Español',ja:'日本語',id:'Indonesia'}[l];document.querySelectorAll('[data-i18n]').forEach(e=>e.textContent=tr[l][e.dataset.i18n]||e.textContent);renderProducts();renderCart();loadSupabaseProducts()}
 function toggleLang(){let e=document.getElementById('langMenu');e.style.display=e.style.display==='block'?'none':'block'}
 
 function renderProducts(filter='all'){
  const wrap=document.getElementById('products');wrap.innerHTML='';
  products.filter(p=>filter==='all'||p.cat===filter).forEach(p=>{
   const el=document.createElement('article');el.className='product';
-  el.innerHTML=`<img src="${p.img}" alt="${p.name}"><div class="body"><div class="tag">${p.cat} • ${p.pack}</div><h3>${p.name}</h3><p>${p.desc}</p><div class="price">$${p.price} USD / ${p.pack}</div><div class="min">${p.id==='riper-jasper'?'$80 USD / kg available. ':''}${p.id==='riper-jasper'?'Minimum order value: $100 USD.':'Minimum order value: $100 USD.'}</div><button class="add" onclick="addToCart('${p.id}')">ADD TO CART</button></div>`;
+  el.innerHTML=`<img src="${p.img}" alt="${p.name}"><div class="body"><div class="tag">${p.cat} • ${p.pack}</div><h3>${p.name}</h3><p>${p.desc}</p><div class="price">$${p.price} USD / ${p.pack}</div><div class="min">${p.id==='riper-jasper'?'$80 USD / kg available. ':''}${p.id==='riper-jasper'?'Minimum order value: $150 USD.':'Minimum order value: $150 USD.'}</div><button class="add" onclick="addToCart('${p.id}')">ADD TO CART</button></div>`;
   wrap.appendChild(el);
  });
 }
@@ -141,52 +160,18 @@ function renderCart(){
  const wrap=document.getElementById('cartItems');wrap.innerHTML='';
  if(!cart.length){wrap.innerHTML='<p style="color:#888;font:13px Arial">Your cart is empty.</p>'}
  cart.forEach(i=>{let p=products.find(x=>x.id===i.id);let row=document.createElement('div');row.className='cartrow';row.innerHTML=`<img src="${p.img}" alt=""><div><h4>${p.name}</h4><p>$${p.price} × ${i.qty} · ${p.pack}</p><div class="qty"><button onclick="changeQty('${p.id}',-1)">−</button><span>${i.qty}</span><button onclick="changeQty('${p.id}',1)">+</button><button class="remove" onclick="removeItem('${p.id}')">Remove</button></div></div><strong>$${(p.price*i.qty).toFixed(0)}</strong>`;wrap.appendChild(row)});
- document.getElementById('checkoutBtn').disabled=total<100;
+ document.getElementById('checkoutBtn').disabled=total<150;
 }
 function openCart(){document.getElementById('cartOverlay').style.display='block';renderCart()}
 function closeCart(){document.getElementById('cartOverlay').style.display='none'}
 function startCheckout(){
  const total=cart.reduce((a,i)=>a+products.find(p=>p.id===i.id).price*i.qty,0);
- if(total<100)return;
+ if(total<150)return;
  // Secure payment integration placeholder. The PayPal client secret must never be put in this public HTML.
  alert('PayPal checkout is ready to be connected. For live checkout, connect this storefront to a secure PayPal backend/serverless function using your PayPal Business credentials.');
 }
 
 setLang(lang);
 </script>
-
-<script>
-/* DINATA V8 catalog bridge: reads active products from Supabase.
-   It does not remove the existing V8 catalog; it adds a Supabase catalog section
-   only when the page contains #products, #product-list, .products, or .product-grid.
-*/
-document.addEventListener("DOMContentLoaded", async function(){
-  const sb=window.dinataSupabase;
-  if(!sb) return;
-  const target=document.querySelector("#products,#product-list,.products,.product-grid");
-  if(!target) return;
-  try{
-    const {data,error}=await sb.from("products").select("*").eq("active",true).order("created_at",{ascending:false});
-    if(error || !data || !data.length) return;
-    const wrap=document.createElement("div");
-    wrap.setAttribute("data-dinata-supabase-products","true");
-    wrap.style.cssText="display:contents";
-    data.forEach(p=>{
-      const card=document.createElement("article");
-      card.style.cssText="border:1px solid rgba(215,177,106,.35);padding:12px;border-radius:6px;background:rgba(0,0,0,.18)";
-      const img=p.image_url?'<img src="'+String(p.image_url).replace(/"/g,'&quot;')+'" alt="" style="width:100%;aspect-ratio:1;object-fit:cover">':"";
-      card.innerHTML=img+
-        '<h3 style="margin:10px 0 6px">'+escapeHtml(p.name||"")+'</h3>'+
-        '<div style="opacity:.75;font-size:.9em">'+escapeHtml(p.category||"")+'</div>'+
-        '<div style="margin-top:6px;font-weight:700">$'+Number(p.price||0).toFixed(2)+' USD</div>'+
-        '<div style="opacity:.75;font-size:.85em;margin-top:4px">'+escapeHtml(p.pack||"")+'</div>';
-      wrap.appendChild(card);
-    });
-    target.appendChild(wrap);
-  }catch(e){}
-  function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
-});
-</script>
-
 </body>
 </html>
