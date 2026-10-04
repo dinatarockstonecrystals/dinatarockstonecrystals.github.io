@@ -70,6 +70,27 @@ footer{border-top:1px solid var(--line);padding:28px 6%;text-align:center;color:
     <div id="cartItems"></div>
     <div class="total">Total: $<span id="cartTotal">0</span> USD</div>
     <div class="notice">Minimum order value: <strong>$150 USD</strong>. Add products until your cart reaches the minimum, then continue to PayPal checkout.</div>
+    <div class="buyer-address">
+  <h3>Shipping Address</h3>
+
+  <label for="buyerName">Full Name</label>
+  <input id="buyerName" type="text" placeholder="Full name" required>
+
+  <label for="buyerEmail">Email</label>
+  <input id="buyerEmail" type="email" placeholder="Email address" required>
+
+  <label for="buyerCountry">Country</label>
+  <input id="buyerCountry" type="text" placeholder="Country" required>
+
+  <label for="buyerAddress">Street Address</label>
+  <input id="buyerAddress" type="text" placeholder="Street address" required>
+
+  <label for="buyerCity">City</label>
+  <input id="buyerCity" type="text" placeholder="City" required>
+
+  <label for="buyerPostal">Postal Code</label>
+  <input id="buyerPostal" type="text" placeholder="Postal code" required>
+</div>
     <button id="checkoutBtn" class="checkout" onclick="startCheckout()" disabled>Proceed to PayPal Checkout</button>
     <div class="paynote">PayPal will determine the payment methods available to the buyer, which may include eligible debit/credit card options.</div>
   </aside>
