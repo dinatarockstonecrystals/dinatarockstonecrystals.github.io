@@ -1,0 +1,150 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dinata Rockstone & Crystals — Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;padding:20px;background:#111827;color:#f3f4f6;font:15px Arial,sans-serif}main{max-width:900px;margin:auto}h1{color:#d7b46a;font-size:25px}h2{font-size:19px}input,textarea,button{width:100%;padding:12px;margin:6px 0;border:1px solid #475569;border-radius:7px;background:#1f2937;color:white;font-size:15px}button{background:#a47b35;border:0;font-weight:bold;cursor:pointer}button.secondary{background:#374151}button.danger{background:#991b1b}.panel{background:#1f2937;padding:16px;border-radius:10px;margin:16px 0}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.product{border:1px solid #475569;padding:12px;margin:10px 0;border-radius:8px;overflow-wrap:anywhere}.muted{color:#cbd5e1;font-size:13px}#app{display:none}img.preview{max-width:100px;max-height:100px;object-fit:cover;border-radius:6px}@media(max-width:500px){.row{grid-template-columns:1fr}body{padding:12px}}
+</style>
+</head>
+<body>
+<main>
+<h1>Dinata Rockstone & Crystals</h1>
+<p class="muted">Admin — Product Management</p>
+<section class="panel" id="login">
+<h2>Login Admin</h2>
+<label>Email admin</label>
+<input id="email" type="email" autocomplete="username" placeholder="Email admin">
+<label>Kata sandi</label>
+<input id="password" type="password" autocomplete="current-password" placeholder="Kata sandi">
+<button onclick="login()">Login</button>
+<p id="loginMessage" class="muted"></p>
+</section>
+<section id="app">
+<div class="panel">
+<p id="signedIn" class="muted"></p>
+<button class="secondary" onclick="logout()">Keluar</button>
+</div>
+<div class="panel">
+<h2 id="formTitle">Tambah Produk</h2>
+<input id="productId" type="hidden">
+<label>Nama produk</label>
+<input id="name" placeholder="Nama produk" required>
+<div class="row">
+<div><label>Kategori</label><input id="category" placeholder="Contoh: Cabochons"></div>
+<div><label>Harga (USD)</label><input id="price" type="number" min="0" step="0.01" placeholder="100"></div>
+</div>
+<label>Keterangan pack / satuan</label>
+<input id="pack" placeholder="Contoh: 6 pcs per pack">
+<label>Deskripsi produk</label>
+<textarea id="description" rows="3" placeholder="Deskripsi produk"></textarea>
+<label>URL gambar produk</label>
+<input id="image_url" type="url" placeholder="https://...">
+<label><input id="active" type="checkbox" checked style="width:auto;margin-right:8px">Produk aktif / tampil di website</label>
+<button onclick="saveProduct()">Simpan Produk</button>
+<button class="secondary" onclick="clearForm()">Batal / Kosongkan Form</button>
+<p id="formMessage" class="muted"></p>
+</div>
+<div class="panel">
+<h2>Daftar Produk</h2>
+<button class="secondary" onclick="loadProducts()">Muat Ulang Produk</button>
+<div id="products">Memuat...</div>
+</div>
+</section>
+</main>
+<script>
+const SUPABASE_URL="https://macrgsudylsidomvxwld.supabase.co";
+const SUPABASE_KEY="sb_publishable_INX8OEbFoPQwykjAfdXg-Q_GBGNiw8A";
+const ADMIN_EMAIL="alvinaldinata88@gmail.com";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const $=id=>document.getElementById(id);
+function message(id,text){$(id).textContent=text}
+async function login(){
+const email=$("email").value.trim();
+const password=$("password").value;
+message("loginMessage","Memeriksa login...");
+const {data,error}=await db.auth.signInWithPassword({email,password});
+if(error){message("loginMessage","Login gagal: "+error.message);return}
+if(data.user.email.toLowerCase()!==ADMIN_EMAIL.toLowerCase()){
+await db.auth.signOut();message("loginMessage","Email ini tidak diizinkan menjadi admin.");return}
+message("loginMessage","");
+await showAdmin(data.user);
+}
+async function showAdmin(user){
+$("login").style.display="none";$("app").style.display="block";
+message("signedIn","Login sebagai "+user.email);
+await loadProducts();
+}
+async function logout(){
+await db.auth.signOut();
+$("app").style.display="none";$("login").style.display="block";
+$("password").value="";message("loginMessage","Kamu sudah keluar.");
+}
+function clearForm(){
+["productId","name","category","price","pack","description","image_url"].forEach(id=>$(id).value="");
+$("active").checked=true;$("formTitle").textContent="Tambah Produk";
+message("formMessage","");
+}
+async function loadProducts(){
+$("products").textContent="Memuat produk...";
+const {data,error}=await db.from("products").select("*").order("id",{ascending:false});
+if(error){$("products").textContent="Gagal memuat: "+error.message;return}
+if(!data.length){$("products").textContent="Belum ada produk.";return}
+$("products").innerHTML="";
+data.forEach(p=>{
+const card=document.createElement("div");card.className="product";
+const title=document.createElement("strong");title.textContent=p.name||"(Tanpa nama)";
+const info=document.createElement("p");info.className="muted";
+info.textContent="Kategori: "+(p.category||"-")+" | Harga: $"+Number(p.price||0).toFixed(2)+" | "+(p.active?"Aktif":"Nonaktif")+(p.pack?" | "+p.pack:"");
+card.append(title,info);
+if(p.image_url){const img=document.createElement("img");img.className="preview";img.src=p.image_url;img.alt=p.name||"Produk";img.loading="lazy";card.append(img)}
+const edit=document.createElement("button");edit.textContent="Edit";edit.onclick=()=>editProduct(p);
+const del=document.createElement("button");del.textContent="Hapus Produk";del.className="danger";del.onclick=()=>deleteProduct(p.id,p.name);
+card.append(edit,del);$("products").append(card);
+});
+}
+async function saveProduct(){
+const id=$("productId").value;
+const name=$("name").value.trim();
+const price=Number($("price").value);
+if(!name||$("price").value===""||!Number.isFinite(price)||price<0){message("formMessage","Isi nama produk dan harga yang valid.");return}
+const product={name,category:$("category").value.trim(),price,pack:$("pack").value.trim(),description:$("description").value.trim(),image_url:$("image_url").value.trim()||null,active:$("active").checked};
+message("formMessage","Menyimpan...");
+const result=id?await db.from("products").update(product).eq("id",Number(id)):await db.from("products").insert(product);
+if(result.error){message("formMessage","Gagal menyimpan: "+result.error.message);return}
+message("formMessage","Produk berhasil disimpan.");
+clearForm();await loadProducts();
+}
+function editProduct(p){
+$("productId").value=p.id;$("name").value=p.name||"";$("category").value=p.category||"";
+$("price").value=p.price??"";$("pack").value=p.pack||"";$("description").value=p.description||"";
+$("image_url").value=p.image_url||"";$("active").checked=p.active!==false;
+$("formTitle").textContent="Edit Produk #"+p.id;
+message("formMessage","Ubah data lalu tekan Simpan Produk.");
+window.scrollTo({top:0,behavior:"smooth"});
+}
+async function deleteProduct(id,name){
+if(!confirm('Hapus produk "'+name+'"? Tindakan ini tidak dapat dibatalkan.'))return;
+const {error}=await db.from("products").delete().eq("id",id);
+if(error){alert("Gagal menghapus: "+error.message);return}
+clearForm();await loadProducts();alert("Produk dihapus.");
+}
+async function init(){
+if(SUPABASE_URL.startsWith("MASUKKAN_")||SUPABASE_KEY.startsWith("MASUKKAN_")){
+message("loginMessage","Konfigurasi Supabase belum diisi.");return}
+const {data:{session}}=await db.auth.getSession();
+if(session){
+if(session.user.email.toLowerCase()===ADMIN_EMAIL.toLowerCase())await showAdmin(session.user);
+else await db.auth.signOut();
+}
+db.auth.onAuthStateChange((event,session)=>{
+if(event==="SIGNED_OUT"){$("app").style.display="none";$("login").style.display="block"}
+});
+}
+init();
+</script>
+</body>
+</html>
