@@ -108,6 +108,33 @@ const del=document.createElement("button");del.textContent="Hapus Produk";del.cl
 card.append(edit,del);$("products").append(card);
 });
 }
+
+async function uploadProductImage() {
+  const file = document.getElementById("image_file").files[0];
+
+  if (!file) return document.getElementById("image_url").value.trim();
+
+  const extension = file.name.split(".").pop().toLowerCase();
+  const filePath = Date.now() + "-" + Math.random().toString(36).slice(2) + "." + extension;
+
+  const { data, error } = await db.storage
+    .from("product-images")
+    .upload(filePath, file, {
+      upsert: false,
+      contentType: file.type
+    });
+
+  if (error) {
+    throw new Error("Gagal mengunggah gambar: " + error.message);
+  }
+
+  const { data: publicData } = db.storage
+    .from("product-images")
+    .getPublicUrl(data.path);
+
+  return publicData.publicUrl;
+}
+
 async function saveProduct(){
 const id=$("productId").value;
 const name=$("name").value.trim();
