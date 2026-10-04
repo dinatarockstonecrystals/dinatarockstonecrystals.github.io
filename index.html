@@ -86,6 +86,54 @@ let products=[
 const SUPABASE_URL = "https://macrgsudylsidomvxwld.supabase.co";
 const SUPABASE_KEY = "sb_publishable_INX8OEbFoPQwykjAfdXg-Q_GBGNiw8A";
 const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+async function syncProductsFromSupabase() {
+  try {
+    const { data, error } = await db
+      .from("products")
+      .select("id,name,category,price,pack,description,image_url,active");
+ .eq("active", true);
+    if (error) throw error;
+
+    const knownIds = {
+      "fossil coral pair": "fossil-coral",
+      "riper jasper palm stones": "riper-jasper",
+      "cloudy plume doublet": "cloudy-plume",
+      "colored halfmoon": "colored-halfmoon",
+      "petrified wood / palm root cabochons": "petrified-wood"
+    };
+
+    const dbNames = new Set(
+      data.map(p => (p.name || "").trim().toLowerCase())
+    );
+
+    const oldProducts = products.filter(
+      p => !dbNames.has(p.name.trim().toLowerCase())
+    );
+
+    const dbProducts = data
+      .filter(p => p.active === true)
+      .map(p => {
+        const nameKey = (p.name || "").trim().toLowerCase();
+
+        return {
+          id: knownIds[nameKey] || String(p.id),
+          name: p.name || "",
+          cat: p.category || "",
+          price: Number(p.price || 0),
+          pack: p.pack || "",
+          img: p.image_url || "",
+          desc: p.description || ""
+        };
+      });
+
+    products = [...oldProducts, ...dbProducts];
+    renderProducts();
+    renderCart();
+  } catch (error) {
+    console.error("Gagal memuat produk Supabase:", error);
+  }
+}
+
 let cart=JSON.parse(localStorage.getItem('dinataCart')||'[]');
 let lang=localStorage.getItem('dinataLang')||'en';
 
@@ -231,6 +279,7 @@ alert("Could not confirm payment: "+error.message+". Please do not pay again unt
 }
 handlePaypalReturn();
 setLang(lang);
+  syncProductsFromSupabase();
 </script>
 </body>
 </html>
