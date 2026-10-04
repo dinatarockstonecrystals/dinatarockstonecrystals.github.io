@@ -83,7 +83,9 @@ let products=[
 {id:'colored-halfmoon',name:'Colored Halfmoon',cat:'cabochons',price:100,pack:'6 pcs',img:'products/colored-halfmoon-1.jpg',desc:'Colorful half-moon carving cabochons for jewelry, accessories and collections.'},
 {id:'petrified-wood',name:'Petrified Wood / Palm Root Cabochons',cat:'cabochons',price:100,pack:'6 pcs',img:'products/petrified-wood-palm-root-1.jpg',desc:'Polished natural material with distinctive organic patterns for jewelry making.'}
 ];
-
+const SUPABASE_URL = "https://macrgsudylsidomvxwld.supabase.co";
+const SUPABASE_KEY = "sb_publishable_INX8OEbFoPQwykjAfdXg-Q_GBGNiw8A";
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let cart=JSON.parse(localStorage.getItem('dinataCart')||'[]');
 let lang=localStorage.getItem('dinataLang')||'en';
 
