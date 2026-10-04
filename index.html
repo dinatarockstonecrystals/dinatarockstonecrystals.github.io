@@ -74,65 +74,15 @@ footer{border-top:1px solid var(--line);padding:28px 6%;text-align:center;color:
     <div class="paynote">PayPal will determine the payment methods available to the buyer, which may include eligible debit/credit card options.</div>
   </aside>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
-let products=[
+const products=[
 {id:'fossil-coral',name:'Fossil Coral Pair',cat:'earrings',price:100,pack:'6 pairs',img:'products/fossil-coral-pair-1.jpg',desc:'Natural fossil coral pairs with delicate coral patterns, selected for handmade earrings.'},
 {id:'riper-jasper',name:'Riper Jasper Palm Stones',cat:'palm',price:30,pack:'1 piece',img:'products/riper-jasper-palm-stones-1.jpg',desc:'Polished palm stones with earthy olive, mustard, brown and cream natural patterns. Also available at $80/kg.'},
 {id:'cloudy-plume',name:'Cloudy Plume Doublet',cat:'cabochons',price:100,pack:'5 pcs',img:'products/cloudy-plume-doublet-1.jpg',desc:'Cloud-like plume patterns and polished cabochon form, suitable for handmade earrings.'},
 {id:'colored-halfmoon',name:'Colored Halfmoon',cat:'cabochons',price:100,pack:'6 pcs',img:'products/colored-halfmoon-1.jpg',desc:'Colorful half-moon carving cabochons for jewelry, accessories and collections.'},
 {id:'petrified-wood',name:'Petrified Wood / Palm Root Cabochons',cat:'cabochons',price:100,pack:'6 pcs',img:'products/petrified-wood-palm-root-1.jpg',desc:'Polished natural material with distinctive organic patterns for jewelry making.'}
 ];
-const SUPABASE_URL = "https://macrgsudylsidomvxwld.supabase.co";
-const SUPABASE_KEY = "sb_publishable_INX8OEbFoPQwykjAfdXg-Q_GBGNiw8A";
-const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-async function syncProductsFromSupabase() {
-  try {
-    const { data, error } = await db
-      .from("products")
-      .select("id,name,category,price,pack,description,image_url,active");
- .eq("active", true);
-    if (error) throw error;
-
-    const knownIds = {
-      "fossil coral pair": "fossil-coral",
-      "riper jasper palm stones": "riper-jasper",
-      "cloudy plume doublet": "cloudy-plume",
-      "colored halfmoon": "colored-halfmoon",
-      "petrified wood / palm root cabochons": "petrified-wood"
-    };
-
-    const dbNames = new Set(
-      data.map(p => (p.name || "").trim().toLowerCase())
-    );
-
-    const oldProducts = products.filter(
-      p => !dbNames.has(p.name.trim().toLowerCase())
-    );
-
-    const dbProducts = data
-      .filter(p => p.active === true)
-      .map(p => {
-        const nameKey = (p.name || "").trim().toLowerCase();
-
-        return {
-          id: knownIds[nameKey] || String(p.id),
-          name: p.name || "",
-          cat: p.category || "",
-          price: Number(p.price || 0),
-          pack: p.pack || "",
-          img: p.image_url || "",
-          desc: p.description || ""
-        };
-      });
-
-    products = [...oldProducts, ...dbProducts];
-    renderProducts();
-    renderCart();
-  } catch (error) {
-    console.error("Gagal memuat produk Supabase:", error);
-  }
-}
 
 let cart=JSON.parse(localStorage.getItem('dinataCart')||'[]');
 let lang=localStorage.getItem('dinataLang')||'en';
@@ -279,7 +229,6 @@ alert("Could not confirm payment: "+error.message+". Please do not pay again unt
 }
 handlePaypalReturn();
 setLang(lang);
-  syncProductsFromSupabase();
 </script>
 </body>
 </html>
