@@ -90,7 +90,7 @@ async function syncProductsFromSupabase() {
   try {
     const { data, error } = await db
       .from("products")
-      .select("id,name,category,price,pack,description,image_url,active");
+      .select("id,name,category,price,pack,description,image_url,active")
  .eq("active", true);
     if (error) throw error;
 
