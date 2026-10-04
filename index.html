@@ -78,7 +78,8 @@ footer{border-top:1px solid var(--line);padding:28px 6%;text-align:center;color:
 
   <label for="buyerEmail">Email</label>
   <input id="buyerEmail" type="email" placeholder="Email address" required>
-
+  <label for="buyerPhone">Phone Number</label>
+  <input id="buyerPhone" type="tel" placeholder="Phone number (include country code)" required>
   <label for="buyerCountry">Country</label>
   <input id="buyerCountry" type="text" placeholder="Country" required>
 
@@ -90,11 +91,11 @@ footer{border-top:1px solid var(--line);padding:28px 6%;text-align:center;color:
 
   <label for="buyerPostal">Postal Code</label>
   <input id="buyerPostal" type="text" placeholder="Postal code" required>
-</div>
-    <button id="checkoutBtn" class="checkout" onclick="startCheckout()" disabled>Proceed to PayPal Checkout</button>
-    <div class="paynote">PayPal will determine the payment methods available to the buyer, which may include eligible debit/credit card options.</div>
+  </div>
+  <button id="checkoutBtn" class="checkout" onclick="startCheckout()" disabled>Proceed to PayPal Checkout</button>
+  <div class="paynote">PayPal will determine the payment methods available to the buyer, which may include eligible debit/credit card options.</div>
   </aside>
-</div>
+  </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 let products=[
