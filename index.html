@@ -91,7 +91,7 @@ async function syncProductsFromSupabase() {
     .from("products")
     .select("id,name,category,price,pack,description,image_url,active")
     .eq("active", true);
-
+alert("Pemeriksaan Supabase: " + (error ? error.message : (data ? data.length : 0) + " produk aktif ditemukan"));
   if (error) {
     console.error("Gagal mengambil produk Supabase:", error);
     return;
