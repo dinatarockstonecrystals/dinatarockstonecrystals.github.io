@@ -1,0 +1,116 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Uji Katalog Dinata</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 24px;
+      background: #0a0a0b;
+      color: #f5f0e5;
+      font-family: Georgia, serif;
+    }
+    h1 { color: #d8b36a; }
+    #status { color: #aaa49a; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+      gap: 16px;
+    }
+    .product {
+      background: #141416;
+      border: 1px solid #302e2b;
+      padding: 16px;
+    }
+    .product img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+    }
+    .product h2 { color: #d8b36a; font-size: 21px; }
+    .price { font-family: Arial, sans-serif; }
+  </style>
+</head>
+<body>
+  <h1>Uji Katalog Dinata</h1>
+  <p id="status">Menghubungkan ke database...</p>
+  <div id="products" class="grid"></div>
+
+  <script>
+    const SUPABASE_URL = "https://macrgsudylsidomvxwld.supabase.co";
+
+    // Salin publishable key yang sama dari admin.html.
+    const SUPABASE_KEY = "sb_publishable_INX8OEbFoPQwykjAfdXg-Q_GBGNiw8A";
+
+    const db = window.supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+
+    async function loadProducts() {
+      const status = document.getElementById("status");
+      const wrap = document.getElementById("products");
+
+      try {
+        const { data, error } = await db
+          .from("products")
+          .select("id,name,category,price,pack,description,image_url,active")
+          .eq("active", true);
+
+        if (error) throw error;
+
+        wrap.innerHTML = "";
+
+        if (!data || data.length === 0) {
+          status.textContent = "Belum ada produk aktif.";
+          return;
+        }
+
+        data.forEach(p => {
+          const card = document.createElement("article");
+          card.className = "product";
+
+          const title = document.createElement("h2");
+          title.textContent = p.name || "";
+
+          const category = document.createElement("p");
+          category.textContent = p.category || "";
+
+          const price = document.createElement("p");
+          price.className = "price";
+          price.textContent = "$" + (p.price ?? 0) + " USD";
+
+          const pack = document.createElement("p");
+          pack.textContent = p.pack || "";
+
+          const description = document.createElement("p");
+          description.textContent = p.description || "";
+
+          card.append(title, category, price, pack, description);
+
+          if (p.image_url) {
+            const img = document.createElement("img");
+            img.src = p.image_url;
+            img.alt = p.name || "Produk";
+            card.prepend(img);
+          }
+
+          wrap.appendChild(card);
+        });
+
+        status.textContent =
+          "Berhasil! " + data.length + " produk aktif ditemukan.";
+      } catch (err) {
+        status.textContent =
+          "Gagal memuat produk: " + err.message;
+      }
+    }
+
+    loadProducts();
+  </script>
+</body>
+</html>
