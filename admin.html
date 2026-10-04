@@ -140,7 +140,8 @@ const id=$("productId").value;
 const name=$("name").value.trim();
 const price=Number($("price").value);
 if(!name||$("price").value===""||!Number.isFinite(price)||price<0){message("formMessage","Isi nama produk dan harga yang valid.");return}
-const product={name,category:$("category").value.trim(),price,pack:$("pack").value.trim(),description:$("description").value.trim(),image_url:$("image_url").value.trim()||null,active:$("active").checked};
+const imageUrl = await uploadProductImage();
+const product={name,category:$("category").value.trim(),price,pack:$("pack").value.trim(),description:$("description").value.trim(),image_url:imageUrl||null,active:$("active").checked};
 message("formMessage","Menyimpan...");
 const result=id?await db.from("products").update(product).eq("id",Number(id)):await db.from("products").insert(product);
 if(result.error){message("formMessage","Gagal menyimpan: "+result.error.message);return}
